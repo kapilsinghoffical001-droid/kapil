@@ -1,22 +1,18 @@
+# Stage 1: Build (optional)
+FROM ubuntu:24.04 as builder
+
+RUN apt-get update && apt-get install -y git
+RUN git clone https://github.com/kapilsinghoffical001-droid/kapil.git /app
+
+# Stage 2: Production
 FROM ubuntu:24.04
 
-# Avoid interactive prompts
-ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y apache2 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install dependencies
-RUN apt-get update && apt-get install -y apache2 wget unzip
-
-# Remove default files
 RUN rm -rf /var/www/html/*
 
-# Download and setup your repo (MASTER branch)
-RUN wget https://github.com/kapilsinghoffical001-droid/kapil/archive/refs/heads/master.zip && \
-    unzip master.zip && \
-    cp -r kapil-master/* /var/www/html/ && \
-    rm -rf master.zip kapil-master
+COPY --from=builder /app /var/www/html
 
-# Expose port
 EXPOSE 80
-
-# Run Apache in foreground
 CMD ["apachectl", "-D", "FOREGROUND"]
